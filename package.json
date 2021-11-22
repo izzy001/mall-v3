@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "npm run nodemon",
     "test": "jest --watchAll --verbose --detectOpenHandles --coverage",
-    "nodemon": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' -r ts-node/register/transpile-only -r tsconfig-paths/register --exec 'ts-node --files' src/index.ts"
+    "nodemon": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' -r ts-node/register/transpile-only -r tsconfig-paths/register --exec 'ts-node --files' src/index.ts",
+    "start": "node build/src/index.js",
+    "build": "tsc"
+  },
+  "engines": {
+    "node": "14.18.0"
   },
   "keywords": [
     "altmall"
