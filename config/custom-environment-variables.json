@@ -1,0 +1,4 @@
+{
+    "jwtPrivateKey": "altmall_jwtPrivateKey",
+    "db": "db"
+}
