@@ -10,9 +10,9 @@ import { Otp } from '../models/otp.model';
 export const sendOtp = async (req: any, res: any) => {
 
    const otpEmailExists =  await Otp.findOne({email: req.body.email});
-   if(otpEmailExists!.verified === true) return res.status(401).send({
+   if(otpEmailExists!.verified === true) return res.status(403).send({
        message: "This user is verified!...Kindly proceed to register user"});
-       
+
     if(otpEmailExists!.verified === false) {
         await Otp.deleteOne({ email: req.body.email});
     }
