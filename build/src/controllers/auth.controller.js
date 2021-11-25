@@ -40,7 +40,14 @@ const user_model_1 = require("../models/user.model");
 const token_model_1 = require("../models/token.model");
 const otp_model_1 = require("../models/otp.model");
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield otp_model_1.Otp.findOneAndDelete({ email: req.body.email, verified: false });
+    const otpEmailExists = yield otp_model_1.Otp.findOne({ email: req.body.email });
+    if (otpEmailExists.verified === true)
+        return res.status(401).send({
+            message: "This user is verified!...Kindly proceed to register user"
+        });
+    if (otpEmailExists.verified === false) {
+        yield otp_model_1.Otp.deleteOne({ email: req.body.email });
+    }
     //attempting to generate otp
     //Generate OTP 
     const otp = otpGenerator.generate(6, { alphabets: false, upperCase: false, specialChars: false });
