@@ -40,6 +40,7 @@ const user_model_1 = require("../models/user.model");
 const token_model_1 = require("../models/token.model");
 const otp_model_1 = require("../models/otp.model");
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield otp_model_1.Otp.findOneAndDelete({ email: req.body.email, verified: false });
     //attempting to generate otp
     //Generate OTP 
     const otp = otpGenerator.generate(6, { alphabets: false, upperCase: false, specialChars: false });
@@ -97,7 +98,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     user.password = yield bcrypt_1.default.hash(user.password, salt);
     yield user.save();
     const token = user.generateAuthToken();
-    res.header('x-auth-token', token).send(_.pick(user, ['_id', 'first_name', 'email']));
+    res.header('x-auth-token', token).status(201).send(_.pick(user, ['_id', 'first_name', 'email']));
 });
 exports.registerUser = registerUser;
 const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

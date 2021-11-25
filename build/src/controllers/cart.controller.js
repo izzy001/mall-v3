@@ -62,7 +62,7 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
         });
         yield newCartInstance.save();
-        return res.send({
+        return res.status(201).send({
             message: "item added to cart successfully",
             details: newCartInstance
         });

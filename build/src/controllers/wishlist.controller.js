@@ -46,7 +46,7 @@ const addToWishlist = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (wishlist) {
         console.log(req.body.product_id);
         console.log(`this is wishlist id: ${wishlist._id}`);
-        const updatedWishlist = yield wishlist_model_1.Wishlist.findByIdAndUpdate({ _id: wishlist._id }, { $addToSet: { items: req.body.product_id } }, { returnDocument: 'after' });
+        const updatedWishlist = yield wishlist_model_1.Wishlist.findByIdAndUpdate({ _id: wishlist._id }, { $addToSet: { items: req.body.product_id } }, { new: true });
         return res.send({
             message: "wishlist updated!",
             details: updatedWishlist
@@ -61,7 +61,7 @@ const addToWishlist = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             }
         });
         yield newWishlist.save();
-        return res.send({
+        return res.status(201).send({
             message: "Item added to wishlist!",
             details: newWishlist
         });

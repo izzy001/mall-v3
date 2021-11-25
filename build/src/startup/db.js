@@ -8,7 +8,8 @@ const winston_1 = __importDefault(require("winston"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const config_1 = __importDefault(require("config"));
 function dbConn() {
-    const db = config_1.default.get("db");
+    const db = config_1.default.get("db"); //'mongodb://localhost:27017/altmall-v3'
+    //
     mongoose_1.default.connect(db)
         .then(() => winston_1.default.info(`Connected to ${db} ...`));
     //mongodb://localhost:27017/altmall-v3

@@ -22,19 +22,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authRouter = void 0;
+exports.userRouter = void 0;
 const express_1 = __importDefault(require("express"));
-const auth = __importStar(require("../controllers/auth.controller"));
+const user = __importStar(require("../controllers/user.controller"));
 const auth_1 = require("../middleware/auth");
-const token_1 = require("../middleware/token");
-exports.authRouter = express_1.default.Router();
+exports.userRouter = express_1.default.Router();
 //send token
-exports.authRouter.post('/send-verification-code', auth.sendOtp);
-//authRouter.post('/verify-token', TokenMiddleware, auth.verifyToken);
-exports.authRouter.post('/verify-otp', token_1.TokenMiddleware, auth.verifyOtp);
-exports.authRouter.post('/register', auth.registerUser);
-exports.authRouter.get('/me', auth_1.AuthMiddleware, auth.getUser);
-exports.authRouter.post('/login', auth.loginUser);
-exports.authRouter.post('/initiate-password-reset', auth.requestPasswordReset);
-exports.authRouter.post('/password-reset', auth.resetPassword);
-//# sourceMappingURL=auth.route.js.map
+exports.userRouter.patch('/update/me', auth_1.AuthMiddleware, user.updateUserProfile);
+//# sourceMappingURL=user.route.js.map
