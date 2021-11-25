@@ -36,7 +36,7 @@ export const addToWishlist = async (req: any, res: any) => {
         const updatedWishlist = await Wishlist.findByIdAndUpdate(
             { _id: wishlist._id },
             { $addToSet: { items: req.body.product_id } },
-            { returnDocument:'after'},
+            { new: true},
         );
         return res.send({
             message: "wishlist updated!",
@@ -52,7 +52,7 @@ export const addToWishlist = async (req: any, res: any) => {
             }
         });
         await newWishlist.save();
-        return res.send({
+        return res.status(201).send({
             message: "Item added to wishlist!",
             details: newWishlist
         });

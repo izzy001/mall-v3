@@ -8,6 +8,8 @@ import { Token } from '../models/token.model';
 import { Otp } from '../models/otp.model';
 
 export const sendOtp = async (req: any, res: any) => {
+
+    await Otp.findOneAndDelete({email: req.body.email, verified: false});
     //attempting to generate otp
     //Generate OTP 
     const otp = otpGenerator.generate(6, { alphabets: false, upperCase: false, specialChars: false });
@@ -64,7 +66,7 @@ export const registerUser = async (req: any, res: any) => {
     user.password = await bcrypt.hash(user.password, salt);
     await user.save();
     const token = user.generateAuthToken();
-    res.header('x-auth-token', token).send(_.pick(user, ['_id', 'first_name', 'email']));
+    res.header('x-auth-token', token).status(201).send(_.pick(user, ['_id', 'first_name', 'email']));
 };
 
 

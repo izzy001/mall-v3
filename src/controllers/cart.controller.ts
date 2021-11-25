@@ -32,6 +32,7 @@ export const addToCart = async (req: any, res: any) => {
     const cartExist = await Cart.findOne({ "user_id": req.user._id, checkoutStatus: false});
     if(cartExist) {
         //update cart instance for user by pushing new Product
+        
         return res.send({
             message: "cart updated!",
            // details: updatedWishlist
@@ -51,7 +52,7 @@ export const addToCart = async (req: any, res: any) => {
         });
 
         await newCartInstance.save();
-        return res.send({
+        return res.status(201).send({
              message: "item added to cart successfully",
              details: newCartInstance
         
