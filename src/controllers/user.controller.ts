@@ -24,7 +24,7 @@ export const updateUserProfile = async (req: any, res: any) => {
    if(updatedUser!.sex != ""||null && updatedUser!.dob != ""||null){
        const userProfileComplete = await User.findByIdAndUpdate(
            req.user._id,
-           {profileCompleted: true}
+           {profile_completed: true}
        );
        return res.send(userProfileComplete)
    };

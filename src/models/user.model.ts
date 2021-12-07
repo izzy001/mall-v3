@@ -72,7 +72,11 @@ const userSchema = new Schema({
         minlength: 5,
         maxlength: 1024
     },
-    profileCompleted: {
+    profile_completed: {
+        type: Boolean,
+        default: false
+    },
+    two_factor_authentication: { 
         type: Boolean,
         default: false
     },

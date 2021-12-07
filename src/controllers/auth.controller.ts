@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 import { User, validateUser, validateLogin, validateEmail, validateResetPasswordDetails } from '../models/user.model';
 import { Token } from '../models/token.model';
 import { Otp } from '../models/otp.model';
+import { TwoFA } from '../models/2FA.model';
 
 export const sendOtp = async (req: any, res: any) => {
 
@@ -35,6 +36,45 @@ export const sendOtp = async (req: any, res: any) => {
         otp: otp
     });
 };
+
+export const send2FACode = async (req: any, res: any) => {
+
+    const twoFAEmailExists =  await TwoFA.findOne({email: req.body.email});
+    
+      if(twoFAEmailExists) {
+          await TwoFA.deleteOne({ email: req.body.email});
+      }
+  
+      //attempting to generate otp
+      //Generate OTP 
+      const otp = otpGenerator.generate(6, { alphabets: false, upperCase: false, specialChars: false });
+  
+      //create OTP instance in DB
+      const twoFA_instance = await TwoFA.create({
+          email: req.body.email,
+          otp: otp,
+          expiration_time: Date.now() + 300000
+      });
+  
+      const verification_token = twoFA_instance.generate2FAToken();
+      res.send({
+          message: "Otp has been successfully sent to user",
+          details: verification_token,
+          otp: otp
+      });
+  };
+
+  export const verify2FAToken = async (req: any, res: any) => {
+    //check if email is valid
+    const isEmailValid = await TwoFA.findOne({ email: req.user.email });
+    if (!isEmailValid) return res.status(400).send('This email is not in our records');
+    const isValidOtp = await TwoFA.findOne({ otp: req.body.otp });
+    if (!isValidOtp) return res.status(400).send('This token is invalid! Resend OTP');
+    if (new Date() > new Date(req.user.expiration_time)) return res.status(400).send('This token is expired! Resend OTP');
+    if (req.body.otp == req.user.otp) return res.send({ message: 'Otp verified succesfully!' });
+};
+
+
 
 export const verifyOtp = async (req: any, res: any) => {
     //check if email is valid
@@ -99,9 +139,10 @@ export const loginUser = async (req: any, res: any) => {
 
     const token = user.generateAuthToken();
     //res.header('x-auth-token', token).send(_.pick(user, ['_id', 'first_name', 'email']));
-    res.header('x-auth-token', token).send({
+    res.send({
         message: "User Login Successful",
-        details: _.pick(user, ['_id', 'first_name', 'email'])
+        details: _.pick(user, ['_id', 'first_name', 'email']),
+        token: token
     });
 };
 
