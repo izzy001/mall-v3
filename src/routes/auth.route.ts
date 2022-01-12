@@ -7,6 +7,7 @@ export const authRouter = express.Router();
 
 //send token
 authRouter.post('/send-verification-code', auth.sendOtp);
+authRouter.post('/check-2fa-status', auth.check2FAStatus);
 authRouter.post('/send-2fa-code', auth.send2FACode);
 authRouter.post('/verify-2fa-code', TokenMiddleware, auth.verify2FAToken);
 //authRouter.post('/verify-token', TokenMiddleware, auth.verifyToken);

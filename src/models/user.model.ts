@@ -15,6 +15,7 @@ export interface IUser {
     password: string
     referral_code: string
     active: boolean
+    two_factor_authentication: boolean
     activation_data: {
         activation_token: string,
         createdAt: Date

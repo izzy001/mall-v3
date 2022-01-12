@@ -9,7 +9,6 @@ import { Otp } from '../models/otp.model';
 import { TwoFA } from '../models/2FA.model';
 
 export const sendOtp = async (req: any, res: any) => {
-
   const otpEmailExists =  await Otp.findOne({email: req.body.email});
    if(otpEmailExists?.verified === true) return res.status(403).send({
        message: "This user is verified!...Kindly proceed to register user"});
@@ -37,6 +36,22 @@ export const sendOtp = async (req: any, res: any) => {
     });
 };
 
+//check if 2FA is set by user
+export const check2FAStatus = async (req: any, res: any) => {
+
+    const emailExistsInRecord = await User.findOne({email: req.body.email});
+    if(!emailExistsInRecord) return res.status(400).send('This email does not exist in our records');
+
+    console.log(`This is user record ${emailExistsInRecord}`)
+
+    const status = emailExistsInRecord.two_factor_authentication;
+     return res.send({
+         "message": "2FA status retrieved successfully",
+         "status": status
+     });
+};
+
+
 export const send2FACode = async (req: any, res: any) => {
 
     const twoFAEmailExists =  await TwoFA.findOne({email: req.body.email});
@@ -44,6 +59,9 @@ export const send2FACode = async (req: any, res: any) => {
       if(twoFAEmailExists) {
           await TwoFA.deleteOne({ email: req.body.email});
       }
+
+      const emailExistsInRecord = await User.findOne({email: req.body.email});
+      if(!emailExistsInRecord) return res.status(400).send('This email does not exist in our records');
   
       //attempting to generate otp
       //Generate OTP 
@@ -67,10 +85,11 @@ export const send2FACode = async (req: any, res: any) => {
   export const verify2FAToken = async (req: any, res: any) => {
     //check if email is valid
     const isEmailValid = await TwoFA.findOne({ email: req.user.email });
-    if (!isEmailValid) return res.status(400).send('This email is not in our records');
+    if (!isEmailValid) return res.status(400).send({ message: 'This email is not in our records'});
     const isValidOtp = await TwoFA.findOne({ otp: req.body.otp });
-    if (!isValidOtp) return res.status(400).send('This token is invalid! Resend OTP');
-    if (new Date() > new Date(req.user.expiration_time)) return res.status(400).send('This token is expired! Resend OTP');
+    if (!isValidOtp) return res.status(400).send({ message: 'This token is invalid! Resend OTP'});
+    if (new Date() > new Date(req.user.expiration_time)) return res.status(400).send(
+        { message: 'This token is expired! Resend OTP'});
     if (req.body.otp == req.user.otp) return res.send({ message: 'Otp verified succesfully!' });
 };
 
