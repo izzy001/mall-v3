@@ -110,7 +110,7 @@ export const validateUser = (user: object) => {
         last_name: Joi.string().min(3).max(20).required(),
         email: Joi.string().min(5).max(255).required().email(),
         referral_code: Joi.string().optional(),
-        password: Joi.string().min(5).max(1024).pattern(new RegExp('(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$')).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
     }); // new validation for schema  in node v16
 
 
@@ -120,7 +120,7 @@ export const validateUser = (user: object) => {
 export const validateLogin = (user: object) => {
     const schema = Joi.object({
         email: Joi.string().min(5).max(255).required().email(),
-        password: Joi.string().min(5).max(1024).pattern(new RegExp('(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$')).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
     });
 
     return schema.validate(user);
@@ -143,7 +143,7 @@ export const validateResetPasswordDetails = (user: object) => {
         //     .min(3).max(20).required().email(),
         user_id: Joi.objectId().required(),
         token: Joi.string().required(),
-        password: Joi.string().min(5).max(1024).pattern(new RegExp('(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$')).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
     });
     return schema.validate(user);
 }
