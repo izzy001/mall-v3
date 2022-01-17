@@ -12,14 +12,11 @@ export interface IUser {
     email: string
     sex: string
     dob: string
+    phone: string
     password: string
     referral_code: string
     active: boolean
     two_factor_authentication: boolean
-    activation_data: {
-        activation_token: string,
-        createdAt: Date
-    }
 }
 
 export default interface IUserModel extends Document, IUser {
@@ -62,6 +59,12 @@ const userSchema = new Schema({
     dob: {
         type: String,
         // required: true,
+    },
+    phone: {
+        type: String,
+        trim: true,
+        minlength: 11,
+        maxlength: 14
     },
     active: {
         type: Boolean,
@@ -107,7 +110,7 @@ export const validateUser = (user: object) => {
         last_name: Joi.string().min(3).max(20).required(),
         email: Joi.string().min(5).max(255).required().email(),
         referral_code: Joi.string().optional(),
-        password: Joi.string().min(5).max(1024).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp('(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$')).required()
     }); // new validation for schema  in node v16
 
 
@@ -117,7 +120,7 @@ export const validateUser = (user: object) => {
 export const validateLogin = (user: object) => {
     const schema = Joi.object({
         email: Joi.string().min(5).max(255).required().email(),
-        password: Joi.string().min(5).max(1024).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp('(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$')).required()
     });
 
     return schema.validate(user);
@@ -140,7 +143,17 @@ export const validateResetPasswordDetails = (user: object) => {
         //     .min(3).max(20).required().email(),
         user_id: Joi.objectId().required(),
         token: Joi.string().required(),
-        password: Joi.string().min(5).max(1024).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp('(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$')).required()
+    });
+    return schema.validate(user);
+}
+
+export const validateUserUpdate = (user: object) => {
+    const schema = Joi.object({ 
+        sex: Joi.string().valid('male', 'female').optional(),
+        dob: Joi.date().iso().optional(),
+        phone: Joi.string().min(11).max(14).optional(),
+        two_factor_authentication: Joi.boolean().optional(),
     });
     return schema.validate(user);
 }

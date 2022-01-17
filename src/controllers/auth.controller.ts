@@ -94,8 +94,6 @@ export const verify2FAToken = async (req: any, res: any) => {
     if (req.body.otp == req.user.otp) return res.send({ message: 'Otp verified succesfully!' });
 };
 
-
-
 export const verifyOtp = async (req: any, res: any) => {
     //check if email is valid
     const isEmailValid = await Otp.findOne({ email: req.user.email });
@@ -136,7 +134,6 @@ export const registerUser = async (req: any, res: any) => {
     const token = user.generateAuthToken();
     res.header('x-auth-token', token).status(201).send(_.pick(user, ['_id', 'first_name', 'email']));
 };
-
 
 export const getUser = async (req: any, res: any) => {
     const user = await User.findById(req.user._id).select('-password');
