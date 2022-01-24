@@ -1,10 +1,11 @@
 import { Cart } from '../models/cart.model';
 import { User } from '../models/user.model';
+import { Product } from '../models/product.model';
 
 //get user cart
 export const getUserCart = async (req: any, res: any) => {
-    const cart = await Cart.findOne({ user_id: req.user._id, checkoutStatus: false})
-   //.populate(["user_id"]); //, "items.product"
+    const cart = await Cart.findOne({ user: req.user._id, checkoutStatus: false})
+   .populate("items.product"); //, "items.product"
     if(!cart) return res.status(404).send({ message: 'There is no cart instance for user'});
     if(cart.items.length === 0) return res.send({ message: 'user cart is empty!'});
     res.send({
@@ -22,28 +23,33 @@ export const addToCart = async (req: any, res: any) => {
     });
 
      //check if req.body.item  passed exists
-    // const item = await Product.findById(req.body.item);
-    // if(!item) return res.status(400).send({
-    //     message: 'Fatal Error: Cannot add item to wish list',
-    //     details: "This item does not exist"
-    // });
+    const item = await Product.findById(req.body.product);
+    if(!item) return res.status(400).send({
+        message: 'Fatal Error: Cannot add item to cart',
+        details: "This item does not exist"
+    });
 
     //check if cart exist for user
-    const cartExist = await Cart.findOne({ "user_id": req.user._id, checkoutStatus: false});
+    const cartExist = await Cart.findOne({ "user": req.user._id, checkoutStatus: false});
     if(cartExist) {
         //update cart instance for user by pushing new Product
-        
+        const updatedCart = await  Cart.findByIdAndUpdate({
+            _id: cartExist._id
+        },
+        {$addToSet: {items: req.body }},
+       {writeConcern: true, new: true }
+        ).populate("items.product"); 
         return res.send({
             message: "cart updated!",
-           // details: updatedWishlist
+            details: updatedCart
         });
     };
 
     if(!cartExist) {
         let newCartInstance = new Cart({
-            user_id: req.user._id,
+            user: req.user._id,
             items: {
-                product_id: req.body.product_id,
+                product: req.body.product,
                 quantity: req.body.quantity,
                 color: req.body.color,
                 size: req.body.size,
@@ -52,10 +58,13 @@ export const addToCart = async (req: any, res: any) => {
         });
 
         await newCartInstance.save();
+        const cartDetails = await Cart.findOne({_id: newCartInstance._id})
+                            //.populate("user")
+                            .populate("items.product");
+
         return res.status(201).send({
              message: "item added to cart successfully",
-             details: newCartInstance
-        
+             details: cartDetails
         });
     }
     
@@ -72,7 +81,7 @@ export const removeItemFromCart = async (req: any, res: any) => {
     });
 
     //check if cart exist for user
-    const cartExist = await Cart.findOne({ user_id: req.user._id });
+    const cartExist = await Cart.findOne({ user: req.user._id });
     if(!cartExist) return res.status(404).send({
         message: 'Bad Request',
         details: "Cannot find cart for this user"
@@ -101,7 +110,7 @@ export const deleteUserCart = async (req: any, res: any) => {
     });
 
     //check if cart exist for user
-    const cartExist = await Cart.findOne({ user_id: req.user._id });
+    const cartExist = await Cart.findOne({ user: req.user._id });
     if(!cartExist) return res.status(404).send({
         message: 'Bad Request',
         details: "Cannot find cart for this user"
@@ -118,5 +127,33 @@ export const deleteUserCart = async (req: any, res: any) => {
         details: emptyCart
     });
 };
+
+
+//update cart item
+export const updateCartItem = async (req: any, res: any) => {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(400).send({
+        message: 'Bad Request: Cannot add item to cart',
+        details: "This user does not exist"
+    });
+
+      //check if req.body.item  passed exists
+    //   const item = await Product.findById(req.body.product_id);
+    //   if(!item) return res.status(400).send({
+    //       message: 'Fatal Error: Cannot update item in cart',
+    //       details: "This item does not exist"
+    //   });
+
+    //update Item
+    const updatedItem = await Cart.findOneAndUpdate({ 'items._id': req.params.id}, { $set: { 'items.$.quantity': req.body.quantity, 'items.$.price': req.body.price, 'items.$.color': req.body.color } }, { new: true });
+
+    if (!updatedItem) return res.status(404).send('Item not found');
+
+    res.send({
+        message: 'item updated successfully',
+        details: updatedItem
+    });
+    
+}
 
 

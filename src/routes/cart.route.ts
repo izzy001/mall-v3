@@ -8,6 +8,7 @@ cartRouter.post('/',AuthMiddleware, cart.addToCart);
 cartRouter.get('/',AuthMiddleware, cart.getUserCart);
 cartRouter.delete('/:id',AuthMiddleware, cart.deleteUserCart);
 cartRouter.delete('/item/:id', AuthMiddleware, cart.removeItemFromCart);
+cartRouter.put('/item/:id', AuthMiddleware, cart.updateCartItem);
 
 
 

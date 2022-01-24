@@ -115,7 +115,7 @@ export const registerUser = async (req: any, res: any) => {
     //Check if user is verified
     let userIsVerified = await Otp.findOne({ email: req.body.email }, { verified: true });
     if (!userIsVerified) return res.status(400).send({
-        details: 'This user does not exist!'
+        details: 'This user have not verified their email!'
     });
 
     let user = await User.findOne({ email: req.body.email });
