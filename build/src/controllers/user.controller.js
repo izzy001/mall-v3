@@ -17,6 +17,12 @@ const user_model_1 = require("../models/user.model");
 //update user profile
 const updateUserProfile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //authenticate user data via AuthMiddleware
+    //validate data 
+    const { error } = (0, user_model_1.validateUserUpdate)(req.body);
+    if (error)
+        return res.status(400).send({
+            validation_details: error.details[0].message
+        });
     //check if user exists
     const user = yield user_model_1.User.findOne({ email: req.user.email });
     if (!user)
@@ -27,7 +33,7 @@ const updateUserProfile = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const updatedUser = yield user_model_1.User.findByIdAndUpdate(req.user._id, { $set: req.body }, { new: true });
     console.log(`This is updated user ${updatedUser}`);
     if (updatedUser.sex != "" || null && updatedUser.dob != "" || null) {
-        const userProfileComplete = yield user_model_1.User.findByIdAndUpdate(req.user._id, { profileCompleted: true });
+        const userProfileComplete = yield user_model_1.User.findByIdAndUpdate(req.user._id, { profile_completed: true });
         return res.send(userProfileComplete);
     }
     ;

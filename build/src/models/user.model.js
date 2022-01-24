@@ -22,7 +22,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.validateResetPasswordDetails = exports.validateEmail = exports.validateLogin = exports.validateUser = void 0;
+exports.User = exports.validateUserUpdate = exports.validateResetPasswordDetails = exports.validateEmail = exports.validateLogin = exports.validateUser = void 0;
 const mongoose_1 = require("mongoose");
 const config_1 = __importDefault(require("config"));
 //import Joi from "joi";
@@ -63,6 +63,12 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         // required: true,
     },
+    phone: {
+        type: String,
+        trim: true,
+        minlength: 11,
+        maxlength: 14
+    },
     active: {
         type: Boolean,
         default: false
@@ -73,7 +79,11 @@ const userSchema = new mongoose_1.Schema({
         minlength: 5,
         maxlength: 1024
     },
-    profileCompleted: {
+    profile_completed: {
+        type: Boolean,
+        default: false
+    },
+    two_factor_authentication: {
         type: Boolean,
         default: false
     },
@@ -98,15 +108,15 @@ const validateUser = (user) => {
         last_name: Joi.string().min(3).max(20).required(),
         email: Joi.string().min(5).max(255).required().email(),
         referral_code: Joi.string().optional(),
-        password: Joi.string().min(5).max(1024).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
     }); // new validation for schema  in node v16
     return schema.validate(user); // new validation method in node v16
 };
 exports.validateUser = validateUser;
 const validateLogin = (user) => {
     const schema = Joi.object({
-        email: Joi.string().min(3).max(20).required().email(),
-        password: Joi.string().min(3).max(20).required()
+        email: Joi.string().min(5).max(255).required().email(),
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
     });
     return schema.validate(user);
 };
@@ -128,11 +138,21 @@ const validateResetPasswordDetails = (user) => {
         //     .min(3).max(20).required().email(),
         user_id: Joi.objectId().required(),
         token: Joi.string().required(),
-        password: Joi.string().min(5).max(1024).required()
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
     });
     return schema.validate(user);
 };
 exports.validateResetPasswordDetails = validateResetPasswordDetails;
+const validateUserUpdate = (user) => {
+    const schema = Joi.object({
+        sex: Joi.string().valid('male', 'female').optional(),
+        dob: Joi.date().iso().optional(),
+        phone: Joi.string().min(11).max(14).optional(),
+        two_factor_authentication: Joi.boolean().optional(),
+    });
+    return schema.validate(user);
+};
+exports.validateUserUpdate = validateUserUpdate;
 //create schema object for users
 exports.User = (0, mongoose_1.model)('User', userSchema);
 // export const validate = validateUser;

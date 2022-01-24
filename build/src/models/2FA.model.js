@@ -22,14 +22,29 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cartRouter = void 0;
-const express_1 = __importDefault(require("express"));
-const cart = __importStar(require("../controllers/cart.controller"));
-const auth_1 = require("../middleware/auth");
-exports.cartRouter = express_1.default.Router();
-exports.cartRouter.post('/', auth_1.AuthMiddleware, cart.addToCart);
-exports.cartRouter.get('/', auth_1.AuthMiddleware, cart.getUserCart);
-exports.cartRouter.delete('/:id', auth_1.AuthMiddleware, cart.deleteUserCart);
-exports.cartRouter.delete('/item/:id', auth_1.AuthMiddleware, cart.removeItemFromCart);
-exports.cartRouter.put('/item/:id', auth_1.AuthMiddleware, cart.updateCartItem);
-//# sourceMappingURL=cart.route.js.map
+exports.TwoFA = void 0;
+const mongoose_1 = require("mongoose");
+const jwt = __importStar(require("jsonwebtoken"));
+const config_1 = __importDefault(require("config"));
+const twoFASchema = new mongoose_1.Schema({
+    email: {
+        type: String,
+        required: true,
+        trim: true,
+        minlength: 5,
+        maxlength: 255,
+        unique: true
+    },
+    otp: { type: String, required: true },
+    expiration_time: {
+        type: Date
+    },
+}, {
+    timestamps: true
+});
+twoFASchema.methods.generate2FAToken = function () {
+    const token = jwt.sign({ email: this.email, otp: this.otp, expiration_time: this.expiration_time }, config_1.default.get('jwtPrivateKey'));
+    return token;
+};
+exports.TwoFA = (0, mongoose_1.model)('TwoFA', twoFASchema);
+//# sourceMappingURL=2FA.model.js.map

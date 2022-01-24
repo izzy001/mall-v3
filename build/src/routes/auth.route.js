@@ -30,6 +30,9 @@ const token_1 = require("../middleware/token");
 exports.authRouter = express_1.default.Router();
 //send token
 exports.authRouter.post('/send-verification-code', auth.sendOtp);
+exports.authRouter.post('/check-2fa-status', auth.check2FAStatus);
+exports.authRouter.post('/send-2fa-code', auth.send2FACode);
+exports.authRouter.post('/verify-2fa-code', token_1.TokenMiddleware, auth.verify2FAToken);
 //authRouter.post('/verify-token', TokenMiddleware, auth.verifyToken);
 exports.authRouter.post('/verify-otp', token_1.TokenMiddleware, auth.verifyOtp);
 exports.authRouter.post('/register', auth.registerUser);

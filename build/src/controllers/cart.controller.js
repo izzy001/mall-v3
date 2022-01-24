@@ -9,13 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUserCart = exports.removeItemFromCart = exports.addToCart = exports.getUserCart = void 0;
+exports.updateCartItem = exports.deleteUserCart = exports.removeItemFromCart = exports.addToCart = exports.getUserCart = void 0;
 const cart_model_1 = require("../models/cart.model");
 const user_model_1 = require("../models/user.model");
+const product_model_1 = require("../models/product.model");
 //get user cart
 const getUserCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const cart = yield cart_model_1.Cart.findOne({ user_id: req.user._id, checkoutStatus: false });
-    //.populate(["user_id"]); //, "items.product"
+    const cart = yield cart_model_1.Cart.findOne({ user: req.user._id, checkoutStatus: false })
+        .populate("items.product"); //, "items.product"
     if (!cart)
         return res.status(404).send({ message: 'There is no cart instance for user' });
     if (cart.items.length === 0)
@@ -35,26 +36,30 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             details: "This user does not exist"
         });
     //check if req.body.item  passed exists
-    // const item = await Product.findById(req.body.item);
-    // if(!item) return res.status(400).send({
-    //     message: 'Fatal Error: Cannot add item to wish list',
-    //     details: "This item does not exist"
-    // });
+    const item = yield product_model_1.Product.findById(req.body.product);
+    if (!item)
+        return res.status(400).send({
+            message: 'Fatal Error: Cannot add item to cart',
+            details: "This item does not exist"
+        });
     //check if cart exist for user
-    const cartExist = yield cart_model_1.Cart.findOne({ "user_id": req.user._id, checkoutStatus: false });
+    const cartExist = yield cart_model_1.Cart.findOne({ "user": req.user._id, checkoutStatus: false });
     if (cartExist) {
         //update cart instance for user by pushing new Product
+        const updatedCart = yield cart_model_1.Cart.findByIdAndUpdate({
+            _id: cartExist._id
+        }, { $addToSet: { items: req.body } }, { writeConcern: true, new: true }).populate("items.product");
         return res.send({
             message: "cart updated!",
-            // details: updatedWishlist
+            details: updatedCart
         });
     }
     ;
     if (!cartExist) {
         let newCartInstance = new cart_model_1.Cart({
-            user_id: req.user._id,
+            user: req.user._id,
             items: {
-                product_id: req.body.product_id,
+                product: req.body.product,
                 quantity: req.body.quantity,
                 color: req.body.color,
                 size: req.body.size,
@@ -62,9 +67,12 @@ const addToCart = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
         });
         yield newCartInstance.save();
+        const cartDetails = yield cart_model_1.Cart.findOne({ _id: newCartInstance._id })
+            //.populate("user")
+            .populate("items.product");
         return res.status(201).send({
             message: "item added to cart successfully",
-            details: newCartInstance
+            details: cartDetails
         });
     }
 });
@@ -79,7 +87,7 @@ const removeItemFromCart = (req, res) => __awaiter(void 0, void 0, void 0, funct
             details: "This user does not exist"
         });
     //check if cart exist for user
-    const cartExist = yield cart_model_1.Cart.findOne({ user_id: req.user._id });
+    const cartExist = yield cart_model_1.Cart.findOne({ user: req.user._id });
     if (!cartExist)
         return res.status(404).send({
             message: 'Bad Request',
@@ -107,7 +115,7 @@ const deleteUserCart = (req, res) => __awaiter(void 0, void 0, void 0, function*
             details: "This user does not exist"
         });
     //check if cart exist for user
-    const cartExist = yield cart_model_1.Cart.findOne({ user_id: req.user._id });
+    const cartExist = yield cart_model_1.Cart.findOne({ user: req.user._id });
     if (!cartExist)
         return res.status(404).send({
             message: 'Bad Request',
@@ -125,4 +133,28 @@ const deleteUserCart = (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.deleteUserCart = deleteUserCart;
+//update cart item
+const updateCartItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield user_model_1.User.findById(req.user._id);
+    if (!user)
+        return res.status(400).send({
+            message: 'Bad Request: Cannot add item to cart',
+            details: "This user does not exist"
+        });
+    //check if req.body.item  passed exists
+    //   const item = await Product.findById(req.body.product_id);
+    //   if(!item) return res.status(400).send({
+    //       message: 'Fatal Error: Cannot update item in cart',
+    //       details: "This item does not exist"
+    //   });
+    //update Item
+    const updatedItem = yield cart_model_1.Cart.findOneAndUpdate({ 'items._id': req.params.id }, { $set: { 'items.$.quantity': req.body.quantity, 'items.$.price': req.body.price, 'items.$.color': req.body.color } }, { new: true });
+    if (!updatedItem)
+        return res.status(404).send('Item not found');
+    res.send({
+        message: 'item updated successfully',
+        details: updatedItem
+    });
+});
+exports.updateCartItem = updateCartItem;
 //# sourceMappingURL=cart.controller.js.map

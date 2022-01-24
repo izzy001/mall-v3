@@ -31,7 +31,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.requestPasswordReset = exports.loginUser = exports.getUser = exports.registerUser = exports.verifyOtp = exports.sendOtp = void 0;
+exports.resetPassword = exports.requestPasswordReset = exports.loginUser = exports.getUser = exports.registerUser = exports.verifyOtp = exports.verify2FAToken = exports.send2FACode = exports.check2FAStatus = exports.sendOtp = void 0;
 const otpGenerator = __importStar(require("otp-generator"));
 const crypto = __importStar(require("crypto"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -39,13 +39,14 @@ const _ = __importStar(require("lodash"));
 const user_model_1 = require("../models/user.model");
 const token_model_1 = require("../models/token.model");
 const otp_model_1 = require("../models/otp.model");
+const _2FA_model_1 = require("../models/2FA.model");
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const otpEmailExists = yield otp_model_1.Otp.findOne({ email: req.body.email });
-    if (otpEmailExists.verified === true)
-        return res.status(401).send({
+    if ((otpEmailExists === null || otpEmailExists === void 0 ? void 0 : otpEmailExists.verified) === true)
+        return res.status(403).send({
             message: "This user is verified!...Kindly proceed to register user"
         });
-    if (otpEmailExists.verified === false) {
+    if ((otpEmailExists === null || otpEmailExists === void 0 ? void 0 : otpEmailExists.verified) === false) {
         yield otp_model_1.Otp.deleteOne({ email: req.body.email });
     }
     //attempting to generate otp
@@ -60,10 +61,63 @@ const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const verification_token = otp_instance.generateOtpToken();
     res.send({
         message: "Otp has been successfully sent to user",
-        details: verification_token
+        details: verification_token,
+        otp: otp
     });
 });
 exports.sendOtp = sendOtp;
+//check if 2FA is set by user
+const check2FAStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const emailExistsInRecord = yield user_model_1.User.findOne({ email: req.body.email });
+    if (!emailExistsInRecord)
+        return res.status(400).send('This email does not exist in our records');
+    console.log(`This is user record ${emailExistsInRecord}`);
+    const status = emailExistsInRecord.two_factor_authentication;
+    return res.send({
+        "message": "2FA status retrieved successfully",
+        "status": status
+    });
+});
+exports.check2FAStatus = check2FAStatus;
+const send2FACode = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const twoFAEmailExists = yield _2FA_model_1.TwoFA.findOne({ email: req.body.email });
+    if (twoFAEmailExists) {
+        yield _2FA_model_1.TwoFA.deleteOne({ email: req.body.email });
+    }
+    const emailExistsInRecord = yield user_model_1.User.findOne({ email: req.body.email });
+    if (!emailExistsInRecord)
+        return res.status(400).send('This email does not exist in our records');
+    //attempting to generate otp
+    //Generate OTP 
+    const otp = otpGenerator.generate(6, { alphabets: false, upperCase: false, specialChars: false });
+    //create OTP instance in DB
+    const twoFA_instance = yield _2FA_model_1.TwoFA.create({
+        email: req.body.email,
+        otp: otp,
+        expiration_time: Date.now() + 300000
+    });
+    const verification_token = twoFA_instance.generate2FAToken();
+    res.send({
+        message: "Otp has been successfully sent to user",
+        details: verification_token,
+        otp: otp
+    });
+});
+exports.send2FACode = send2FACode;
+const verify2FAToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    //check if email is valid
+    const isEmailValid = yield _2FA_model_1.TwoFA.findOne({ email: req.user.email });
+    if (!isEmailValid)
+        return res.status(400).send({ message: 'This email is not in our records' });
+    const isValidOtp = yield _2FA_model_1.TwoFA.findOne({ otp: req.body.otp });
+    if (!isValidOtp)
+        return res.status(400).send({ message: 'This token is invalid! Resend OTP' });
+    if (new Date() > new Date(req.user.expiration_time))
+        return res.status(400).send({ message: 'This token is expired! Resend OTP' });
+    if (req.body.otp == req.user.otp)
+        return res.send({ message: 'Otp verified succesfully!' });
+});
+exports.verify2FAToken = verify2FAToken;
 const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     //check if email is valid
     const isEmailValid = yield otp_model_1.Otp.findOne({ email: req.user.email });
@@ -92,7 +146,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     let userIsVerified = yield otp_model_1.Otp.findOne({ email: req.body.email }, { verified: true });
     if (!userIsVerified)
         return res.status(400).send({
-            details: 'This user does not exist!'
+            details: 'This user have not verified their email!'
         });
     let user = yield user_model_1.User.findOne({ email: req.body.email });
     if (user)
@@ -129,9 +183,10 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return res.status(400).send('Incorrect Password');
     const token = user.generateAuthToken();
     //res.header('x-auth-token', token).send(_.pick(user, ['_id', 'first_name', 'email']));
-    res.header('x-auth-token', token).send({
+    res.send({
         message: "User Login Successful",
-        details: _.pick(user, ['_id', 'first_name', 'email'])
+        details: _.pick(user, ['_id', 'first_name', 'email']),
+        token: token
     });
 });
 exports.loginUser = loginUser;
@@ -153,18 +208,22 @@ const requestPasswordReset = (req, res) => __awaiter(void 0, void 0, void 0, fun
         yield token.deleteOne();
     let resetToken = crypto.randomBytes(10).toString('hex'); //Math.random().toString(36).substr(2, 5); //crypto.randomBytes(32).toString('hex');
     console.log(`This is the reset token generated ${resetToken}`);
-    const salt = yield bcrypt_1.default.genSalt(10);
-    const hash = yield bcrypt_1.default.hash(resetToken, salt);
-    console.log(`This is the hashed reset token : ${hash}`);
-    yield new token_model_1.Token({
-        user_id: user._id,
-        token: hash,
-        createdAt: Date.now()
-    }).save();
+    const saltRounds = 10;
+    //const salt = await bcrypt.genSalt(saltRounds);
+    yield bcrypt_1.default.hash(resetToken, saltRounds, function (err, hash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield new token_model_1.Token({
+                user_id: user._id,
+                token: hash,
+                createdAt: Date.now()
+            }).save();
+            console.log(`This is the hashed reset token : ${hash}`);
+            const link = `http://localhost:8000/passwordReset?token=${resetToken}&id=${user._id}`;
+            return res.send(link);
+        });
+    });
     // const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
-    const link = `http://localhost:8000/passwordReset?token=${hash}&id=${user._id}`;
     //TODO : email sending via Template to customers: waiting for templates from Cx
-    res.send(link);
 });
 exports.requestPasswordReset = requestPasswordReset;
 const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -175,15 +234,12 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
     //Check if token exist
     const passwordResetToken = yield token_model_1.Token.findOne({ user_id: req.body.user_id });
-    console.log(`This is a password reset token ${passwordResetToken}`);
     if (!passwordResetToken)
         return res.status(400).send({
             details: "Invalid or expired password reset token"
         });
     //check if reset token received matches with token saved to user's profile
-    console.log(`this is the token from request ${req.body.token}`);
     const isValid = yield bcrypt_1.default.compare(req.body.token, passwordResetToken.token);
-    console.log(isValid);
     if (!isValid)
         return res.status(400).send({
             details: "Invalid or expired password reset token"
@@ -193,8 +249,10 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     yield user_model_1.User.updateOne({ _id: req.body.user_id }, { $set: { password: hash } }, { new: true });
     const user = yield user_model_1.User.findById({ _id: req.body.user_id });
     //TODO: email sending via Template to customers: waiting on Cx
-    yield passwordResetToken.deleteOne();
-    return true;
+    //await passwordResetToken.deleteOne();
+    return res.send({
+        message: 'Password change is successful'
+    });
 });
 exports.resetPassword = resetPassword;
 //# sourceMappingURL=auth.controller.js.map
