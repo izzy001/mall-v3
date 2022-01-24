@@ -7,7 +7,7 @@ export const wishlistRouter = express.Router()
 wishlistRouter.post('/', AuthMiddleware, wishlist.addToWishlist);
 wishlistRouter.get('/', AuthMiddleware, wishlist.getUserWishlist);
 wishlistRouter.delete('/item/:id',AuthMiddleware, wishlist.removeItemFromWishlist);
-// wishlistRouter.delete('/', cart.deleteUserCart);
+wishlistRouter.delete('/:id', AuthMiddleware, wishlist.deleteWishlist);
 //userRouter.put('/password-reset', cart.updateCart);
 
 

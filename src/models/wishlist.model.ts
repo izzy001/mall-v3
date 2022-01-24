@@ -4,7 +4,7 @@ import Joi from "joi";
 import * as jwt from "jsonwebtoken";
 
 export interface IWishlist {
-    user_id: ObjectId,
+    user: ObjectId,
     items: Array<Object>,
 }
 
@@ -13,7 +13,7 @@ export default interface IWishlistModel extends Document, IWishlist {
 }
 
 const wishlistSchema = new Schema({
-    user_id: {
+    user: {
         type: Schema.Types.ObjectId,
         required: true,
         ref: "User"
@@ -21,7 +21,7 @@ const wishlistSchema = new Schema({
     items: [
         {
             _id: false,
-            product_id: { type: Schema.Types.ObjectId, ref: "Product" }
+            product: { type: Schema.Types.ObjectId, ref: "Product" }
         }
     ],
     __v: {
