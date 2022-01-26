@@ -158,6 +158,13 @@ export const validateUserUpdate = (user: object) => {
     return schema.validate(user);
 }
 
+export const validatePassword = (user: object) => {
+    const schema = Joi.object({ 
+        password: Joi.string().min(5).max(1024).pattern(new RegExp(/^(?=.*?[a-z])(?=.*?[A-Z])(?=.*?[\d]).{8,35}$/)).required()
+    });
+    return schema.validate(user);
+}
+
 //create schema object for users
 export const User = model<IUserModel>('User', userSchema);
 

@@ -4,8 +4,7 @@ import { Product } from '../models/product.model';
 
 //get user cart
 export const getUserCart = async (req: any, res: any) => {
-    const cart = await Cart.findOne({ user: req.user._id, checkoutStatus: false})
-   .populate("items.product"); //, "items.product"
+    const cart = await Cart.findOne({ user: req.user._id, checkoutStatus: false}).populate("items.product"); //, "items.product"
     if(!cart) return res.status(404).send({ message: 'There is no cart instance for user'});
     if(cart.items.length === 0) return res.send({ message: 'user cart is empty!'});
     res.send({

@@ -7,6 +7,7 @@ export const userRouter = express.Router()
 
 //send token
 userRouter.patch('/update/me', AuthMiddleware, user.updateUserProfile);
+userRouter.post('/confirm/me', AuthMiddleware, user.confirmUserPassword);
 
 
 
