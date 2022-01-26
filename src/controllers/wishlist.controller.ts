@@ -4,7 +4,7 @@ import { Product } from '../models/product.model';
 
 //get user wishlist
 export const getUserWishlist = async (req: any, res: any) => {
-    const wishlist = await Wishlist.findOne({ user: req.user._id });
+    const wishlist = await Wishlist.findOne({ user: req.user._id }).populate("items.product");
     if(!wishlist) return res.status(404).send({
         message: 'Wishlist not found for this user'
     })
