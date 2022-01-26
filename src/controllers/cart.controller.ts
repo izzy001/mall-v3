@@ -91,7 +91,7 @@ export const removeItemFromCart = async (req: any, res: any) => {
         { user: req.user._id, checkoutStatus: false },
         { $pull:  { items: {product: req.params.id}} },
         { writeConcern: true, multi: true, new: true }
-       );
+       ).populate("items.product");
     if(!removeCartItem) return res.status(404).send({
         message: 'Bad Request: Cannot remove the item from cart',
         details: "This item does not exist in user's cart"
