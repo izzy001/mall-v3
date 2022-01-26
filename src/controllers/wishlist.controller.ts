@@ -7,7 +7,8 @@ export const getUserWishlist = async (req: any, res: any) => {
     const wishlist = await Wishlist.findOne({ user: req.user._id }).populate("items.product");
     if(!wishlist) return res.status(404).send({
         message: 'Wishlist not found for this user'
-    })
+    });
+    if(wishlist.items.length === 0) return res.send({ message: 'user wishlist is empty!'});
     res.send({
         message: 'user wishlist successfully retrieved',
         details: wishlist});
@@ -77,11 +78,16 @@ export const removeItemFromWishlist = async (req: any, res: any) => {
         message: 'Bad Request',
         details: "Cannot find wishlist for this user"
       });
-     const removeWishlistItem =  await Wishlist.findOneAndRemove({'items._id': req.params.id});
+     const removeWishlistItem = await Wishlist.findOneAndUpdate(
+        { user: req.user._id },
+        {$pull:  { items: {product: req.params.id}}},
+        {writeConcern: true, multi: true, new: true }
+        );
      if(!removeWishlistItem) return res.status(404).send({
         message: 'Bad Request: Cannot remove the item from wish list',
         details: "This item does not exist in user's wishlist"
      })
+     if(removeWishlistItem.items.length === 0) return res.send({ message: 'user wishlist is empty!'});
      res.send({
         message: 'This item has been removed from the wishlist successfully!',
         details: removeWishlistItem

@@ -35,4 +35,4 @@ const wishlistSchema = new Schema({
 
 
     //create schema object for carts
-    export const Wishlist =  model('Wishlist', wishlistSchema);
+    export const Wishlist =  model<IWishlistModel>('Wishlist', wishlistSchema);

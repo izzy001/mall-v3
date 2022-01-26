@@ -80,20 +80,28 @@ export const removeItemFromCart = async (req: any, res: any) => {
     });
 
     //check if cart exist for user
-    const cartExist = await Cart.findOne({ user: req.user._id });
+    const cartExist = await Cart.findOne({ user: req.user._id, checkoutStatus: false});
     if(!cartExist) return res.status(404).send({
         message: 'Bad Request',
-        details: "Cannot find cart for this user"
+        details: "Cannot find cart item for this user"
     });
 
-    const removeCartItem = await Cart.findOneAndRemove({'items._id': req.params.id});
+
+    const removeCartItem = await Cart.findOneAndUpdate(
+        { user: req.user._id, checkoutStatus: false },
+        { $pull:  { items: {product: req.params.id}} },
+        { writeConcern: true, multi: true, new: true }
+       );
     if(!removeCartItem) return res.status(404).send({
         message: 'Bad Request: Cannot remove the item from cart',
         details: "This item does not exist in user's cart"
     });
 
+    if(removeCartItem.items.length === 0) return res.send({ message: 'user cart is empty!'});
+
+
     res.send({ 
-        message: 'This item has been removed from the cart successfully!',
+        message: 'item has been removed from the cart and cart instance is updated successfully!',
         details: removeCartItem
     });
 
