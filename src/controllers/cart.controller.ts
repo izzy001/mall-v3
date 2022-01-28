@@ -145,16 +145,16 @@ export const updateCartItem = async (req: any, res: any) => {
     });
 
       //check if req.body.item  passed exists
-    //   const item = await Product.findById(req.body.product_id);
-    //   if(!item) return res.status(400).send({
-    //       message: 'Fatal Error: Cannot update item in cart',
-    //       details: "This item does not exist"
-    //   });
+      const item = await Product.findById(req.params.id);
+      if(!item) return res.status(400).send({
+          message: 'Fatal Error: Cannot update item in cart',
+          details: "This item does not exist"
+      });
 
     //update Item
-    const updatedItem = await Cart.findOneAndUpdate({ 'items._id': req.params.id}, { $set: { 'items.$.quantity': req.body.quantity, 'items.$.price': req.body.price, 'items.$.color': req.body.color } }, { new: true });
+    const updatedItem = await Cart.findOneAndUpdate({ 'items.product': req.params.id}, { $set: { 'items.$.quantity': req.body.quantity, 'items.$.price': req.body.price, 'items.$.color': req.body.color } }, { new: true }).populate("items.product");
 
-    if (!updatedItem) return res.status(404).send('Item not found');
+   // if (!updatedItem) return res.status(404).send('Item not found');
 
     res.send({
         message: 'item updated successfully',
