@@ -17,6 +17,7 @@ export interface IUser {
     referral_code: string
     active: boolean
     two_factor_authentication: boolean
+    address_list: Array<Object>
 }
 
 export default interface IUserModel extends Document, IUser {
@@ -87,7 +88,15 @@ const userSchema = new Schema({
     referral_code: {
         type: String,
         trim: true
-    }
+    },
+    address_list: [
+        {
+            address: {type: String},
+            country: {type: String},
+            state: { type: String },
+            city: { type: String }
+        }
+    ]
 
 },
     {
@@ -150,6 +159,14 @@ export const validateResetPasswordDetails = (user: object) => {
 
 export const validateUserUpdate = (user: object) => {
     const schema = Joi.object({ 
+        address_list: Joi.array().items(
+            Joi.object({ 
+                address: Joi.string(),
+                country: Joi.string(),
+                state: Joi.string(),
+                city: Joi.string()
+            })
+        ),
         sex: Joi.string().valid('male', 'female').optional(),
         dob: Joi.date().iso().optional(),
         phone: Joi.string().min(11).max(14).optional(),
