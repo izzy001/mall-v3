@@ -25,7 +25,9 @@ export default interface IUserModel extends Document, IUser {
     validateUser(user: IUser): object
     validateLogin(user: IUser): object
     validateEmail(user: IUser): object
-    validateResetPasswordDetails(user: any): object
+    validateResetPasswordDetails(user: IUser): object
+    validateUserUpdate(user: IUser): object
+    validatePassword(user: IUser): object
 }
 
 const userSchema = new Schema({
@@ -69,7 +71,7 @@ const userSchema = new Schema({
     },
     active: {
         type: Boolean,
-        default: false
+        default: true
     },
     password: {
         type: String,
@@ -92,9 +94,9 @@ const userSchema = new Schema({
     address_list: [
         {
             address: {type: String},
-            country: {type: String},
-            state: { type: String },
-            city: { type: String }
+            country: {type: String, trim: true, default: 'Nigeria'},
+            state: { type: String, trim: true},
+            city: { type: String, trim: true}
         }
     ]
 
@@ -159,14 +161,14 @@ export const validateResetPasswordDetails = (user: object) => {
 
 export const validateUserUpdate = (user: object) => {
     const schema = Joi.object({ 
-        address_list: Joi.array().items(
-            Joi.object({ 
-                address: Joi.string(),
-                country: Joi.string(),
-                state: Joi.string(),
-                city: Joi.string()
-            })
-        ),
+        // address_list: Joi.array().items(
+        //     Joi.object({ 
+        //         address: Joi.string(),
+        //         country: Joi.string(),
+        //         state: Joi.string(),
+        //         city: Joi.string()
+        //     })
+        // ),
         sex: Joi.string().valid('male', 'female').optional(),
         dob: Joi.date().iso().optional(),
         phone: Joi.string().min(11).max(14).optional(),
