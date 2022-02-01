@@ -3,6 +3,7 @@ import config from "config";
 //import Joi from "joi";
 import * as jwt from "jsonwebtoken";
 import { joiObjectId } from "../startup/validation";
+import { boolean } from "joi";
 // import * as objectId from "joi-objectid";
 const Joi = require("joi");
 Joi.objectId = require('joi-objectid')(Joi);
@@ -18,6 +19,7 @@ export interface IUser {
     active: boolean
     two_factor_authentication: boolean
     address_list: Array<Object>
+    blacklisted: boolean
 }
 
 export default interface IUserModel extends Document, IUser {
@@ -98,7 +100,8 @@ const userSchema = new Schema({
             state: { type: String, trim: true},
             city: { type: String, trim: true}
         }
-    ]
+    ],
+    blacklisted: { type: Boolean, default: false}
 
 },
     {
